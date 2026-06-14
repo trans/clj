@@ -38,20 +38,34 @@ module Jargon
 
     private def help_with_subcommands : String
       lines = ["Usage: #{program_name} <command> [options]", "", "Commands:"]
+
+      width = @subcommands.keys.max_of?(&.size) || 0
       @subcommands.each do |name, subcmd|
         case subcmd
+        when Schema
+          lines << command_line(name, subcmd.root.description, 2, width)
         when CLI
-          lines << "  #{name}"
-          subcmd.subcommands.each_key do |sub_name|
-            lines << "    #{sub_name}"
+          # A nested CLI is a group with no description of its own; list its
+          # children indented, each aligned within their own column.
+          lines << command_line(name, nil, 2, width)
+          sub_width = subcmd.subcommands.keys.max_of?(&.size) || 0
+          subcmd.subcommands.each do |sub_name, sub|
+            description = sub.is_a?(Schema) ? sub.root.description : nil
+            lines << command_line(sub_name, description, 4, sub_width)
           end
-        else
-          lines << "  #{name}"
         end
       end
+
       lines << ""
       lines << "Run '#{program_name} <command> --help' for command-specific options."
       lines.join("\n")
+    end
+
+    # Format one command listing: the name padded to `width`, followed by its
+    # description when present. Trailing padding is trimmed when there is none.
+    private def command_line(name : String, description : String?, indent : Int32, width : Int32) : String
+      entry = "#{" " * indent}#{name.ljust(width)}"
+      (desc = description) ? "#{entry}  #{desc}" : entry.rstrip
     end
 
     private def user_defined_help?(schema : Schema) : Bool

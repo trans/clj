@@ -2022,6 +2022,29 @@ describe Jargon do
       help.should contain("run")
       help.should contain("test")
     end
+
+    it "shows subcommand descriptions in the top-level command list" do
+      cli = Jargon.new("myapp")
+      cli.subcommand("tag", json: %({"type": "object", "description": "Attach tags", "properties": {}}))
+      cli.subcommand("forget", json: %({"type": "object", "description": "Remove a document", "properties": {}}))
+      cli.subcommand("ls", json: %({"type": "object", "properties": {}}))
+
+      help = cli.help
+      help.should contain("tag     Attach tags")
+      help.should contain("forget  Remove a document")
+      # No description: bare name, no trailing padding/description.
+      help.should contain("\n  ls\n")
+    end
+
+    it "shows nested subcommand descriptions" do
+      remote = Jargon.new("remote")
+      remote.subcommand("add", json: %({"type": "object", "description": "Add a remote", "properties": {}}))
+      cli = Jargon.new("git")
+      cli.subcommand("remote", remote)
+
+      help = cli.help
+      help.should contain("add  Add a remote")
+    end
   end
 
   describe "stdin JSON input" do
