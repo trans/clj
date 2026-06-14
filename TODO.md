@@ -87,12 +87,19 @@ $(delete old logs) → rm ...  # destructive, confirm first
 
 ### Dynamic Completion Follow-ups
 
-Scoped out of the initial dynamic-completion work (v0.19.0). All are refinements, not blockers:
+Scoped out of the initial dynamic-completion work (v0.19.0). All are refinements, not blockers. Assessed 2026-06-14 — only #2 is judged worth doing.
 
-- **Nested-object field completers.** Completer paths currently target schema-root fields (flags/positionals) and `subcommand.field`. Completing a nested object field (e.g. `--a.b`) is not handled.
-- **Subcommand abbreviation during completion.** The completion engine resolves subcommands by exact match only; abbreviations (which `parse` supports) aren't expanded when computing candidates.
-- **bash 3.2 portability.** The generated bash shim uses `readarray` (bash 4+). macOS ships bash 3.2 by default — provide a `read`-loop fallback if that matters.
-- **Streaming/lazy completer results.** Completer blocks return `Array(String)`; a truly lazy/streaming return isn't wired (the `ctx.partial` scoping already covers the main performance concern).
+- **#2 Subcommand abbreviation during completion — WORTH REVISITING.** The completion engine resolves subcommands by exact match only; abbreviations (which `parse` supports — `git ci` → `commit`) aren't expanded when computing candidates. So completing the *args* after an abbreviated subcommand silently yields nothing. Completing the subcommand *name* itself works fine; this is only about arg completion after an abbreviated one. A real correctness gap — the one follow-up actually queued. Fix: have the engine reuse the same prefix-resolution `parse` uses when descending into a subcommand.
+
+- **#3 bash 3.2 portability — will resolve itself.** The generated bash shim uses `readarray`/`mapfile` (bash 4+). macOS ships bash 3.2 as `/bin/bash`, so the shim fails there. But most macOS users have moved to zsh (default since Catalina), and bash 3.2 fades over time. Low urgency; a `read`-loop fallback is the fix if a user actually hits it.
+
+- **#1 Nested-object field completers — SKIP (complexity > payoff).** Completer paths target schema-root fields (flags/positionals) and `subcommand.field`. A flag that is itself a nested object completed via dot notation (`--a.b`) can't have a completer attached to the inner `b`. Rare in practice; the path-resolution and engine changes outweigh the benefit.
+
+- **#4 Streaming/lazy completer results — SKIP (illusory benefit).** Completer blocks return `Array(String)` (proc return type is pinned concretely; the whole engine collects to an array before printing). This is deliberate, not a v1 shortcut — laziness here doesn't actually buy anything:
+  - The real goal of "lazy" is *don't enumerate the whole store per keypress*. That's already covered today by scoping the query with `ctx.partial` (`store.search(ctx.partial)`) and/or capping with `.first(N)` — both already return an `Array` that works.
+  - There is no streaming completion protocol: the shell needs the full candidate list, so Jargon must `.to_a` before printing regardless. Accepting a raw lazy `Enumerable` would therefore (a) still materialize, and (b) **hang on an unbounded source** — a footgun. The caller has to bound it either way.
+  - Candidate sets are inherently small (shells truncate/page at tens–hundreds); no memory-saving scenario exists.
+  - Conclusion: `Array(String)` is the correct API, not a limitation to lift.
 
 ### Other Ideas
 
