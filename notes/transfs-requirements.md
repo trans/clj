@@ -111,3 +111,59 @@ confirmation — transfs will likely own resolution regardless.
 (Same symbiosis as crystalfuse and C0DATA: a demanding real consumer hardens the
 tool. transfs is a good stress test for Jargon's GUI-contract story specifically,
 since it's explicitly designed "CLI now, GUI on the same core later.")
+
+---
+
+## Update 2026-06-14: findings from actually integrating Jargon into transfs
+
+Jargon 0.18.1 wired into transfs (compile-time `read_file` of per-subcommand
+YAML schemas; `subcommand(name, yaml:)`; dispatch on `result.subcommand`). The
+`x-` passthrough (#1) works and transfs now carries `x-ui` render hints on every
+command/field. Two real frictions surfaced in use:
+
+### 4. No way to pass a positional value containing `=` / `:` or starting with `-` — **REQUESTED**
+
+transfs has a `tag <id> <tags...>` command (variadic positional). Real tag
+values collide with Jargon's option/arg syntax:
+
+- `tag <id> -draft` → `-draft` is parsed as a short flag ("Unknown option '-d'").
+- `tag <id> stars=4` → `collect_variadic` *breaks* on any item containing `=` or
+  `:` (treated as the equals/colon arg style), so `stars=4` falls through to
+  "Unknown option 'stars'". transfs's `key=value` tag convention (which the
+  design relies on — `stars=4` becomes a rangeable facet at index time) can't be
+  expressed as a CLI positional at all.
+
+So there is currently **no way to feed a variadic positional a literal value**
+that contains `=`/`:` or begins with `-`. Two standard escape hatches would fix
+it; either suffices:
+
+- **(a) `--` end-of-options marker.** After `--`, treat every remaining arg as a
+  literal positional (POSIX convention). `tag <id> -- stars=4 -weird`. Most
+  general; widely expected.
+- **(b) Per-property opt-out of `=`/`:`/dash parsing** for a variadic positional
+  (e.g. an `x-`/schema flag like `raw: true` or `literal-items: true`), so its
+  items are collected verbatim. More targeted.
+
+Workaround transfs took meanwhile: split `tag` (add) / `untag` (remove) so the
+removal case no longer needs a `-` prefix; and bare tags (`finance`, `q2`) work
+fine. But `key=value` tags via the CLI remain blocked until one of the above
+lands. (a) is probably the right general fix.
+
+### 5. (minor) Subcommand `--help` lists names without their descriptions
+
+`transfs2 --help` lists the commands but not their one-line `description:` from
+each schema. Showing the description beside each name would make the top-level
+help self-documenting. Small nicety, not blocking.
+
+| # | Item | Status | Likely scope |
+|---|------|--------|--------------|
+| 4 | `--` (or per-prop opt-out) for literal positional values | **Requested** (blocks `key=value` tags) | small |
+| 5 | Show subcommand descriptions in top-level `--help` | nice-to-have | small |
+
+### Update 2026-06-14 (later): #4 RESOLVED in Jargon 0.19.0
+
+`--` literal-positional support shipped in 0.19.0. Verified in transfs:
+`tag <id> -- stars=4` and `tag <id> -- -weird` now pass through to the variadic
+`tags` positional verbatim; bare tags still work without `--`; `untag <id> --
+-weird` handles leading-dash removal too. transfs pinned to `jargon >= 0.19.0`.
+Thanks! #5 (subcommand descriptions in top-level --help) still open, minor.
