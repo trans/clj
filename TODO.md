@@ -2,6 +2,12 @@
 
 ## Completed
 
+- **Subcommand descriptions in top-level `--help`** (v0.19.1) — the command list shows each subcommand's `description:`, column-aligned. (transfs req #5)
+- **Dynamic shell completions** (v0.19.0) — all-callback shim model; `cli.completer(path)` + `cli.handle_completion`; configurable target binary. See `notes/` and the v0.19.0 release. Remaining edges tracked under "Dynamic Completion Follow-ups" below.
+- **POSIX `--` end-of-options passthrough** (v0.19.0) — everything after a bare `--` is a literal positional; variadic positional captures it verbatim. (transfs req #4)
+- **`x-*` extension annotations** (v0.18.0) — consumer-defined keys preserved verbatim on `Property#extensions`, ignored by parsing/validation. (transfs req #1)
+- **Structural type inference** (v0.18.0) — omitted `type:` inferred from `properties`/`items`; contradictory explicit type now errors instead of silently dropping the block. (bug fix)
+
 ### Schema Mixins with $id/$ref/allOf (v0.12.0)
 
 Support for sharing properties across subcommands using standard JSON Schema keywords.
