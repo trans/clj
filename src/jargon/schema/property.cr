@@ -1,5 +1,9 @@
 module Jargon
+  # One node of a parsed schema: a single option/field/positional, or the root
+  # object. Holds its type, validation constraints, CLI hints (`short`, `env`),
+  # nested `properties`/`items`, and any consumer-defined `x-` extensions.
   class Property
+    # The JSON Schema primitive types Jargon recognizes.
     enum Type
       String
       Integer
@@ -69,6 +73,9 @@ module Jargon
     )
     end
 
+    # Build a Property from a JSON Schema node. `name` is the field's key (or
+    # "root"); `required_fields` is the enclosing object's `required` list, used
+    # to set this field's `required?`.
     def self.from_json(name : String, json : JSON::Any, required_fields : Array(String) = [] of String) : Property
       type = resolve_type(name, json)
 

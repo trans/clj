@@ -143,6 +143,19 @@
 
 
 
+  <h2>
+    <a id="overview" class="anchor" href="#overview">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Overview
+  </h2>
+
+  <p>One node of a parsed schema: a single option/field/positional, or the root
+object. Holds its type, validation constraints, CLI hints (<code><a href="../Jargon/Property.html#short%3AString%7CNil-instance-method">#short</a></code>, <code><a href="../Jargon/Property.html#env%3AString%7CNil-instance-method">#env</a></code>),
+nested <code><a href="../Jargon/Property.html#properties%3AHash%28String%2CProperty%29%7CNil-instance-method">#properties</a></code>/<code><a href="../Jargon/Property.html#items%3AProperty%7CNil-instance-method">#items</a></code>, and any consumer-defined <code>x-</code> extensions.</p>
+
 
 
 
@@ -190,6 +203,8 @@
     
       <li class="entry-summary">
         <a href="#from_json%28name%3AString%2Cjson%3AJSON%3A%3AAny%2Crequired_fields%3AArray%28String%29%3D%5B%5DofString%29%3AProperty-class-method" class="signature"><strong>.from_json</strong>(name : String, json : JSON::Any, required_fields : Array(String) = <span class="o">[]</span> <span class="k">of</span> <span class="t">String</span>) : Property</a>
+        
+          <div class="summary"><p>Build a Property from a JSON Schema node.</p></div>
         
       </li>
     
@@ -402,6 +417,13 @@
 
         <a class="method-permalink" href="#from_json%28name%3AString%2Cjson%3AJSON%3A%3AAny%2Crequired_fields%3AArray%28String%29%3D%5B%5DofString%29%3AProperty-class-method">#</a>
       </div>
+      
+        <div class="doc">
+          
+          <p>Build a Property from a JSON Schema node. <code><a href="../Jargon/Property.html#name%3AString-instance-method">#name</a></code> is the field's key (or
+&quot;root&quot;); <code>required_fields</code> is the enclosing object's <code>required</code> list, used
+to set this field's <code><a href="../Jargon/Property.html#required%3F%3ABool-instance-method">#required?</a></code>.</p>
+        </div>
       
       <br/>
       <div>

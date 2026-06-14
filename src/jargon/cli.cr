@@ -7,6 +7,11 @@ require "./validator"
 require "./completion"
 
 module Jargon
+  # A command-line parser driven by one or more schemas. A CLI is either *flat*
+  # (a single `schema`) or in *subcommand mode* (a map of named `subcommands`,
+  # each its own Schema or nested CLI). Build one with `Jargon.cli`/`Jargon.new`,
+  # then `parse` arguments into a `Result`, `json` straight to validated data,
+  # or `run` to also handle `--help`, completion, and error exits.
   class CLI
     getter schema : Schema?
     getter program_name : String
@@ -309,19 +314,25 @@ module Jargon
       end
     end
 
+    # Set the subcommand used when arguments name none.
     def default_subcommand(name : String)
       @default_subcommand = name
     end
 
+    # Set the JSON key that names the subcommand when parsing full JSON from
+    # stdin (the `-` form). Defaults to `"subcommand"`.
     def subcommand_key(key : String)
       @subcommand_key = key
     end
 
-    # Parse arguments and return full Result with errors array.
+    # Parse arguments into a `Result` (parsed data plus any validation errors);
+    # never raises on invalid input. `defaults` seeds values not given on the
+    # command line (e.g. from a config file), below CLI args and env vars.
     def parse(args : Array(String) = ARGV, *, defaults : JSON::Any | Hash(String, JSON::Any) | Nil = nil) : Result
       parse(args, STDIN, defaults: defaults)
     end
 
+    # :ditto: `input` supplies the stream read for the `-` (stdin JSON) form.
     def parse(args : Array(String), input : IO, *, defaults : JSON::Any | Hash(String, JSON::Any) | Nil = nil) : Result
       if !@subcommands.empty?
         parse_with_subcommands(args, input, defaults)
@@ -332,7 +343,8 @@ module Jargon
       end
     end
 
-    # Return just the parsed data as JSON. Raises ParseError on validation errors.
+    # Parse and return just the data, raising `ParseError` on validation errors.
+    # Use when you want the values directly and treat invalid input as fatal.
     def json(args : Array(String) = ARGV, *, defaults : JSON::Any | Hash(String, JSON::Any) | Nil = nil) : JSON::Any
       json(args, STDIN, defaults: defaults)
     end
@@ -780,6 +792,7 @@ module Jargon
       end
     end
 
+    # :ditto: Validate a previously parsed `Result` against its subcommand.
     def validate(result : Result) : Array(String)
       validate(result.data.as_h, result.subcommand)
     end
@@ -791,10 +804,12 @@ module Jargon
       Completion.new(self).bash(command)
     end
 
+    # :ditto:
     def zsh_completion(command : String = @program_name) : String
       Completion.new(self).zsh(command)
     end
 
+    # :ditto:
     def fish_completion(command : String = @program_name) : String
       Completion.new(self).fish(command)
     end
@@ -879,6 +894,9 @@ module Jargon
       end
     end
 
+    # Look up a property by dotted path (e.g. "server.port"), descending through
+    # object properties and resolving `$ref`s. Returns nil if any segment is
+    # missing or a non-final segment isn't an object.
     private def find_property(key : String, schema : Schema) : Property?
       parts = key.split(".")
       current = resolve_property(schema.root, schema)
@@ -959,6 +977,9 @@ module Jargon
       end
     end
 
+    # Store a value under a dotted key, building intermediate objects as needed
+    # (e.g. "server.port" => {"server" => {"port" => ...}}). A nil value is a
+    # no-op; a non-object value blocking the path records an error.
     private def set_nested_value(data : Hash(String, JSON::Any), key : String, value : JSON::Any?, errors : Array(String))
       return unless value
 

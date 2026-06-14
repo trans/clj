@@ -2,6 +2,9 @@ require "json"
 require "./schema"
 
 module Jargon
+  # Schema validation, usable standalone (without the CLI parser) to check a
+  # data hash against a `Schema`. This is the same engine `parse`/`run` apply
+  # to parsed arguments.
   module Validator
     # Validate data against a schema. Returns an array of error strings (empty if valid).
     def self.validate(data : Hash(String, JSON::Any), schema : Schema) : Array(String)

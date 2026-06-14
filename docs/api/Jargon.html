@@ -141,6 +141,20 @@
 
 
 
+  <h2>
+    <a id="overview" class="anchor" href="#overview">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Overview
+  </h2>
+
+  <p>Jargon builds a command-line parser from a JSON Schema: the schema is the
+single source of truth for a CLI's options, types, validation, help text, and
+shell completion. Start from <code><a href="Jargon.html#cli%28program_name%3AString%2C%2A%2Cjson%3AString%29%3ACLI-class-method">Jargon.cli</a></code> (flat CLI) or <code><a href="Jargon.html#new%28program_name%3AString%29%3ACLI-class-method">Jargon.new</a></code>
+(subcommand mode), then <code>parse</code>/<code>run</code> the arguments.</p>
+
 
 
 
@@ -226,7 +240,7 @@
   <dl>
     
       <dt class="entry-const" id="VERSION">
-        <strong>VERSION</strong> = <code><span class="s">&quot;0.18.1&quot;</span></code>
+        <strong>VERSION</strong> = <code><span class="s">&quot;0.19.0&quot;</span></code>
       </dt>
       
     
@@ -248,7 +262,7 @@
       <li class="entry-summary">
         <a href="#new%28program_name%3AString%29%3ACLI-class-method" class="signature"><strong>.new</strong>(program_name : String) : CLI</a>
         
-          <div class="summary"><p>Convenience method to create a CLI with just a program name (for subcommand mode)</p></div>
+          <div class="summary"><p>Create an empty CLI to attach subcommands to (subcommand mode).</p></div>
         
       </li>
     
@@ -269,17 +283,21 @@
       <li class="entry-summary">
         <a href="#cli%28program_name%3AString%2C%2A%2Cjson%3AString%29%3ACLI-class-method" class="signature"><strong>.cli</strong>(program_name : String, *, json : String) : CLI</a>
         
-          <div class="summary"><p>Convenience shortcut with program name first</p></div>
+          <div class="summary"><p>Create a CLI from a schema.</p></div>
         
       </li>
     
       <li class="entry-summary">
         <a href="#cli%28program_name%3AString%2C%2A%2Cfile%3AString%29%3ACLI-class-method" class="signature"><strong>.cli</strong>(program_name : String, *, file : String) : CLI</a>
         
+          <div class="summary"><p>Create a CLI from a schema.</p></div>
+        
       </li>
     
       <li class="entry-summary">
         <a href="#cli%28program_name%3AString%2C%2A%2Cyaml%3AString%29%3ACLI-class-method" class="signature"><strong>.cli</strong>(program_name : String, *, yaml : String) : CLI</a>
+        
+          <div class="summary"><p>Create a CLI from a schema.</p></div>
         
       </li>
     
@@ -357,7 +375,7 @@
       
         <div class="doc">
           
-          <p>Convenience method to create a CLI with just a program name (for subcommand mode)</p>
+          <p>Create an empty CLI to attach subcommands to (subcommand mode).</p>
         </div>
       
       <br/>
@@ -388,7 +406,9 @@
       
         <div class="doc">
           
-          <p>Convenience shortcut with program name first</p>
+          <p>Create a CLI from a schema. The schema source is given by a named argument:
+<code>json:</code>, <code>yaml:</code>, or <code>file:</code> (extension-detected). A multi-document schema
+is auto-detected and loaded as subcommands.</p>
         </div>
       
       <br/>
@@ -405,6 +425,13 @@
         <a class="method-permalink" href="#cli%28program_name%3AString%2C%2A%2Cfile%3AString%29%3ACLI-class-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>Create a CLI from a schema. The schema source is given by a named argument:
+<code>json:</code>, <code>yaml:</code>, or <code>file:</code> (extension-detected). A multi-document schema
+is auto-detected and loaded as subcommands.</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -418,6 +445,13 @@
 
         <a class="method-permalink" href="#cli%28program_name%3AString%2C%2A%2Cyaml%3AString%29%3ACLI-class-method">#</a>
       </div>
+      
+        <div class="doc">
+          
+          <p>Create a CLI from a schema. The schema source is given by a named argument:
+<code>json:</code>, <code>yaml:</code>, or <code>file:</code> (extension-detected). A multi-document schema
+is auto-detected and loaded as subcommands.</p>
+        </div>
       
       <br/>
       <div>

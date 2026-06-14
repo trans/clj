@@ -143,6 +143,21 @@
 
 
 
+  <h2>
+    <a id="overview" class="anchor" href="#overview">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Overview
+  </h2>
+
+  <p>Outcome of parsing arguments. Carries the parsed <code><a href="../Jargon/Result.html#data%3AJSON%3A%3AAny-instance-method">#data</a></code>, any validation
+<code><a href="../Jargon/Result.html#errors%3AArray%28String%29-instance-method">#errors</a></code>, and the resolved <code><a href="../Jargon/Result.html#subcommand%3AString%7CNil-instance-method">#subcommand</a></code>, plus flags describing meta-requests
+(help, shell completion) that <code>run</code> acts on automatically. A pending
+help/completion request is not a validation outcome — check
+<code><a href="../Jargon/Result.html#help_requested%3F%3ABool-instance-method">#help_requested?</a></code>/<code><a href="../Jargon/Result.html#completion_requested%3F%3ABool-instance-method">#completion_requested?</a></code> before treating <code><a href="../Jargon/Result.html#errors%3AArray%28String%29-instance-method">#errors</a></code> as final.</p>
+
 
 
 
@@ -219,20 +234,28 @@
       <li class="entry-summary">
         <a href="#%5B%5D%28key%3AString%29%3AJSON%3A%3AAny-instance-method" class="signature"><strong>#[]</strong>(key : String) : JSON::Any</a>
         
+          <div class="summary"><p>Fetch a top-level value, raising <code>KeyError</code> if absent.</p></div>
+        
       </li>
     
       <li class="entry-summary">
         <a href="#%5B%5D%3F%28key%3AString%29%3AJSON%3A%3AAny%7CNil-instance-method" class="signature"><strong>#[]?</strong>(key : String) : JSON::Any | Nil</a>
+        
+          <div class="summary"><p>Fetch a top-level value, or nil if absent.</p></div>
         
       </li>
     
       <li class="entry-summary">
         <a href="#completion_requested%3F%3ABool-instance-method" class="signature"><strong>#completion_requested?</strong> : Bool</a>
         
+          <div class="summary"><p>True when <code>--completions &lt;shell&gt;</code> was requested.</p></div>
+        
       </li>
     
       <li class="entry-summary">
         <a href="#completion_shell%3AString%7CNil-instance-method" class="signature"><strong>#completion_shell</strong> : String | Nil</a>
+        
+          <div class="summary"><p>The shell passed to <code>--completions</code> (e.g.</p></div>
         
       </li>
     
@@ -249,6 +272,8 @@
       <li class="entry-summary">
         <a href="#help%3F%3ABool-instance-method" class="signature"><strong>#help?</strong> : Bool</a>
         
+          <div class="summary"><p>Alias for <code><a href="../Jargon/Result.html#help_requested%3F%3ABool-instance-method">#help_requested?</a></code>.</p></div>
+        
       </li>
     
       <li class="entry-summary">
@@ -259,25 +284,35 @@
       <li class="entry-summary">
         <a href="#help_subcommand%3AString%7CNil-instance-method" class="signature"><strong>#help_subcommand</strong> : String | Nil</a>
         
+          <div class="summary"><p>Which subcommand's help was requested (nil = top-level help).</p></div>
+        
       </li>
     
       <li class="entry-summary">
         <a href="#subcommand%3AString%7CNil-instance-method" class="signature"><strong>#subcommand</strong> : String | Nil</a>
+        
+          <div class="summary"><p>Resolved subcommand name, space-separated for nested commands; nil for a flat CLI or when no subcommand matched.</p></div>
         
       </li>
     
       <li class="entry-summary">
         <a href="#to_json%3AString-instance-method" class="signature"><strong>#to_json</strong> : String</a>
         
+          <div class="summary"><p>The parsed data as a compact JSON string.</p></div>
+        
       </li>
     
       <li class="entry-summary">
         <a href="#to_pretty_json%3AString-instance-method" class="signature"><strong>#to_pretty_json</strong> : String</a>
         
+          <div class="summary"><p>The parsed data as an indented JSON string.</p></div>
+        
       </li>
     
       <li class="entry-summary">
         <a href="#valid%3F%3ABool-instance-method" class="signature"><strong>#valid?</strong> : Bool</a>
+        
+          <div class="summary"><p>True when parsing produced no validation errors.</p></div>
         
       </li>
     
@@ -377,6 +412,11 @@
         <a class="method-permalink" href="#%5B%5D%28key%3AString%29%3AJSON%3A%3AAny-instance-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>Fetch a top-level value, raising <code>KeyError</code> if absent.</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -390,6 +430,11 @@
 
         <a class="method-permalink" href="#%5B%5D%3F%28key%3AString%29%3AJSON%3A%3AAny%7CNil-instance-method">#</a>
       </div>
+      
+        <div class="doc">
+          
+          <p>Fetch a top-level value, or nil if absent.</p>
+        </div>
       
       <br/>
       <div>
@@ -405,6 +450,11 @@
         <a class="method-permalink" href="#completion_requested%3F%3ABool-instance-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>True when <code>--completions &lt;shell&gt;</code> was requested.</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -418,6 +468,11 @@
 
         <a class="method-permalink" href="#completion_shell%3AString%7CNil-instance-method">#</a>
       </div>
+      
+        <div class="doc">
+          
+          <p>The shell passed to <code>--completions</code> (e.g. &quot;bash&quot;), or nil if not requested.</p>
+        </div>
       
       <br/>
       <div>
@@ -461,6 +516,11 @@
         <a class="method-permalink" href="#help%3F%3ABool-instance-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>Alias for <code><a href="../Jargon/Result.html#help_requested%3F%3ABool-instance-method">#help_requested?</a></code>.</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -489,6 +549,11 @@
         <a class="method-permalink" href="#help_subcommand%3AString%7CNil-instance-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>Which subcommand's help was requested (nil = top-level help).</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -502,6 +567,12 @@
 
         <a class="method-permalink" href="#subcommand%3AString%7CNil-instance-method">#</a>
       </div>
+      
+        <div class="doc">
+          
+          <p>Resolved subcommand name, space-separated for nested commands; nil for a
+flat CLI or when no subcommand matched.</p>
+        </div>
       
       <br/>
       <div>
@@ -517,6 +588,11 @@
         <a class="method-permalink" href="#to_json%3AString-instance-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>The parsed data as a compact JSON string.</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -531,6 +607,11 @@
         <a class="method-permalink" href="#to_pretty_json%3AString-instance-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>The parsed data as an indented JSON string.</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -544,6 +625,12 @@
 
         <a class="method-permalink" href="#valid%3F%3ABool-instance-method">#</a>
       </div>
+      
+        <div class="doc">
+          
+          <p>True when parsing produced no validation errors. Note a help/completion
+request is also error-free, so guard those separately when it matters.</p>
+        </div>
       
       <br/>
       <div>

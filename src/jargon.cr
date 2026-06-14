@@ -4,9 +4,15 @@ require "./jargon/cli"
 require "./jargon/result"
 require "./jargon/completion"
 
+# Jargon builds a command-line parser from a JSON Schema: the schema is the
+# single source of truth for a CLI's options, types, validation, help text, and
+# shell completion. Start from `Jargon.cli` (flat CLI) or `Jargon.new`
+# (subcommand mode), then `parse`/`run` the arguments.
 module Jargon
   VERSION = "0.19.0"
 
+  # Raised by `CLI#json` when validation fails. `errors` holds each message;
+  # the exception message is them joined by newlines.
   class ParseError < Exception
     getter errors : Array(String)
 
@@ -15,7 +21,7 @@ module Jargon
     end
   end
 
-  # Convenience method to create a CLI with just a program name (for subcommand mode)
+  # Create an empty CLI to attach subcommands to (subcommand mode).
   def self.new(program_name : String) : CLI
     CLI.new(program_name)
   end
@@ -30,15 +36,19 @@ module Jargon
     CLI.from_file(path, program_name)
   end
 
-  # Convenience shortcut with program name first
+  # Create a CLI from a schema. The schema source is given by a named argument:
+  # `json:`, `yaml:`, or `file:` (extension-detected). A multi-document schema
+  # is auto-detected and loaded as subcommands.
   def self.cli(program_name : String, *, json : String) : CLI
     CLI.from_json(json, program_name)
   end
 
+  # :ditto:
   def self.cli(program_name : String, *, file : String) : CLI
     CLI.from_file(file, program_name)
   end
 
+  # :ditto:
   def self.cli(program_name : String, *, yaml : String) : CLI
     CLI.from_yaml(yaml, program_name)
   end

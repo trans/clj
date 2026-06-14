@@ -2,6 +2,10 @@ require "json"
 require "./schema/property"
 
 module Jargon
+  # A parsed JSON Schema describing one command: its `root` property (the
+  # object whose properties are the command's options), the named `positional`
+  # arguments, and any reusable `definitions` (`$defs`/`definitions`) that
+  # `$ref` resolves against.
   class Schema
     getter root : Property
     getter definitions : Hash(String, Property)
@@ -10,16 +14,21 @@ module Jargon
     def initialize(@root : Property, @definitions : Hash(String, Property) = {} of String => Property, @positional : Array(String) = [] of String)
     end
 
+    # Build a Schema from a JSON Schema document (string).
     def self.from_json(json_string : String) : Schema
       json = JSON.parse(json_string)
       from_json_any(json)
     end
 
+    # Build a Schema from a JSON Schema file.
     def self.from_file(path : String) : Schema
       json_string = File.read(path)
       from_json(json_string)
     end
 
+    # Build a Schema from an already-parsed JSON document. The whole document
+    # is the root property; `positional` and `definitions`/`$defs` are lifted
+    # out alongside it.
     def self.from_json_any(json : JSON::Any) : Schema
       required_fields = json["required"]?.try(&.as_a.map(&.as_s)) || [] of String
       positional = json["positional"]?.try(&.as_a.map(&.as_s)) || [] of String
@@ -37,6 +46,8 @@ module Jargon
       Schema.new(root, definitions, positional)
     end
 
+    # Resolve a local `$ref` pointer (e.g. `#/$defs/Name`) to its definition,
+    # or nil if the pointer is non-local or unknown.
     def resolve_ref(ref : String) : Property?
       return nil unless ref.starts_with?("#/")
 

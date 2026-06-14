@@ -143,6 +143,20 @@
 
 
 
+  <h2>
+    <a id="overview" class="anchor" href="#overview">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Overview
+  </h2>
+
+  <p>A parsed JSON Schema describing one command: its <code><a href="../Jargon/Schema.html#root%3AProperty-instance-method">#root</a></code> property (the
+object whose properties are the command's options), the named <code><a href="../Jargon/Schema.html#positional%3AArray%28String%29-instance-method">#positional</a></code>
+arguments, and any reusable <code><a href="../Jargon/Schema.html#definitions%3AHash%28String%2CProperty%29-instance-method">#definitions</a></code> (<code>$defs</code>/<code><a href="../Jargon/Schema.html#definitions%3AHash%28String%2CProperty%29-instance-method">#definitions</a></code>) that
+<code>$ref</code> resolves against.</p>
+
 
 
 
@@ -191,15 +205,21 @@
       <li class="entry-summary">
         <a href="#from_file%28path%3AString%29%3ASchema-class-method" class="signature"><strong>.from_file</strong>(path : String) : Schema</a>
         
+          <div class="summary"><p>Build a Schema from a JSON Schema file.</p></div>
+        
       </li>
     
       <li class="entry-summary">
         <a href="#from_json%28json_string%3AString%29%3ASchema-class-method" class="signature"><strong>.from_json</strong>(json_string : String) : Schema</a>
         
+          <div class="summary"><p>Build a Schema from a JSON Schema document (string).</p></div>
+        
       </li>
     
       <li class="entry-summary">
         <a href="#from_json_any%28json%3AJSON%3A%3AAny%29%3ASchema-class-method" class="signature"><strong>.from_json_any</strong>(json : JSON::Any) : Schema</a>
+        
+          <div class="summary"><p>Build a Schema from an already-parsed JSON document.</p></div>
         
       </li>
     
@@ -238,6 +258,8 @@
     
       <li class="entry-summary">
         <a href="#resolve_ref%28ref%3AString%29%3AProperty%7CNil-instance-method" class="signature"><strong>#resolve_ref</strong>(ref : String) : Property | Nil</a>
+        
+          <div class="summary"><p>Resolve a local <code>$ref</code> pointer (e.g.</p></div>
         
       </li>
     
@@ -298,6 +320,11 @@
         <a class="method-permalink" href="#from_file%28path%3AString%29%3ASchema-class-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>Build a Schema from a JSON Schema file.</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -312,6 +339,11 @@
         <a class="method-permalink" href="#from_json%28json_string%3AString%29%3ASchema-class-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>Build a Schema from a JSON Schema document (string).</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -325,6 +357,13 @@
 
         <a class="method-permalink" href="#from_json_any%28json%3AJSON%3A%3AAny%29%3ASchema-class-method">#</a>
       </div>
+      
+        <div class="doc">
+          
+          <p>Build a Schema from an already-parsed JSON document. The whole document
+is the root property; <code><a href="../Jargon/Schema.html#positional%3AArray%28String%29-instance-method">#positional</a></code> and <code><a href="../Jargon/Schema.html#definitions%3AHash%28String%2CProperty%29-instance-method">#definitions</a></code>/<code>$defs</code> are lifted
+out alongside it.</p>
+        </div>
       
       <br/>
       <div>
@@ -397,6 +436,12 @@
 
         <a class="method-permalink" href="#resolve_ref%28ref%3AString%29%3AProperty%7CNil-instance-method">#</a>
       </div>
+      
+        <div class="doc">
+          
+          <p>Resolve a local <code>$ref</code> pointer (e.g. <code>#/$defs/Name</code>) to its definition,
+or nil if the pointer is non-local or unknown.</p>
+        </div>
       
       <br/>
       <div>

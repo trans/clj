@@ -1,5 +1,7 @@
 module Jargon
   class CLI
+    # Render the program's help text: a command listing when subcommands are
+    # defined, an option listing for a flat CLI, or a bare usage line otherwise.
     def help : String
       if !@subcommands.empty?
         help_with_subcommands
@@ -10,6 +12,8 @@ module Jargon
       end
     end
 
+    # Render help for a single subcommand. `subcommand` is space-separated for
+    # nested commands (e.g. `"remote add"`).
     def help(subcommand : String) : String
       parts = subcommand.split(" ", 2)
       subcmd_name = parts[0]
@@ -68,6 +72,10 @@ module Jargon
       end
     end
 
+    # Scan args for an auto-help flag, returning {requested?, index}. A schema
+    # may claim `--help`/`-h` for itself (a `help` property or a property with
+    # short `h`); when it does, the flag belongs to the user's schema and does
+    # not trigger Jargon's built-in help, so we report {false, -1}.
     private def any_help_requested?(args : Array(String), schema : Schema?) : {Bool, Int32}
       args.each_with_index do |arg, i|
         if arg == "--help"

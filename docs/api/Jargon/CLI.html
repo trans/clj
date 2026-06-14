@@ -143,6 +143,21 @@
 
 
 
+  <h2>
+    <a id="overview" class="anchor" href="#overview">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Overview
+  </h2>
+
+  <p>A command-line parser driven by one or more schemas. A CLI is either <em>flat</em>
+(a single <code><a href="../Jargon/CLI.html#schema%3ASchema%7CNil-instance-method">#schema</a></code>) or in <em>subcommand mode</em> (a map of named <code><a href="../Jargon/CLI.html#subcommands%3AHash%28String%2CSchema%7CCLI%29-instance-method">#subcommands</a></code>,
+each its own Schema or nested CLI). Build one with <code><a href="../Jargon.html#cli%28program_name%3AString%2C%2A%2Cjson%3AString%29%3ACLI-class-method">Jargon.cli</a></code>/<code><a href="../Jargon.html#new%28program_name%3AString%29%3ACLI-class-method">Jargon.new</a></code>,
+then <code><a href="../Jargon/CLI.html#parse%28args%3AArray%28String%29%2Cinput%3AIO%2C%2A%2Cdefaults%3AJSON%3A%3AAny%7CHash%28String%2CJSON%3A%3AAny%29%7CNil%3Dnil%29%3AResult-instance-method">#parse</a></code> arguments into a <code><a href="../Jargon/Result.html">Result</a></code>, <code><a href="../Jargon/CLI.html#json%28args%3AArray%28String%29%2Cinput%3AIO%2C%2A%2Cdefaults%3AJSON%3A%3AAny%7CHash%28String%2CJSON%3A%3AAny%29%7CNil%3Dnil%29%3AJSON%3A%3AAny-instance-method">#json</a></code> straight to validated data,
+or <code><a href="../Jargon/CLI.html#run%28args%3AArray%28String%29%2Cinput%3AIO%2C%2A%2Cdefaults%3AJSON%3A%3AAny%7CHash%28String%2CJSON%3A%3AAny%29%7CNil%3Dnil%29%3AResult-instance-method">#run</a></code> to also handle <code>--help</code>, completion, and error exits.</p>
+
 
 
 
@@ -276,6 +291,8 @@
       <li class="entry-summary">
         <a href="#default_subcommand%28name%3AString%29-instance-method" class="signature"><strong>#default_subcommand</strong>(name : String)</a>
         
+          <div class="summary"><p>Set the subcommand used when arguments name none.</p></div>
+        
       </li>
     
       <li class="entry-summary">
@@ -285,6 +302,8 @@
     
       <li class="entry-summary">
         <a href="#fish_completion%28command%3AString%3D%40program_name%29%3AString-instance-method" class="signature"><strong>#fish_completion</strong>(command : String = @program_name) : String</a>
+        
+          <div class="summary"><p>Generate a shell completion shim.</p></div>
         
       </li>
     
@@ -298,10 +317,14 @@
       <li class="entry-summary">
         <a href="#help%28subcommand%3AString%29%3AString-instance-method" class="signature"><strong>#help</strong>(subcommand : String) : String</a>
         
+          <div class="summary"><p>Render help for a single subcommand.</p></div>
+        
       </li>
     
       <li class="entry-summary">
         <a href="#help%3AString-instance-method" class="signature"><strong>#help</strong> : String</a>
+        
+          <div class="summary"><p>Render the program's help text: a command listing when subcommands are defined, an option listing for a flat CLI, or a bare usage line otherwise.</p></div>
         
       </li>
     
@@ -313,7 +336,7 @@
       <li class="entry-summary">
         <a href="#json%28args%3AArray%28String%29%3DARGV%2C%2A%2Cdefaults%3AJSON%3A%3AAny%7CHash%28String%2CJSON%3A%3AAny%29%7CNil%3Dnil%29%3AJSON%3A%3AAny-instance-method" class="signature"><strong>#json</strong>(args : Array(String) = <span class="t">ARGV</span>, *, defaults : JSON::Any | Hash(String, JSON::Any) | Nil = <span class="n">nil</span>) : JSON::Any</a>
         
-          <div class="summary"><p>Return just the parsed data as JSON.</p></div>
+          <div class="summary"><p>Parse and return just the data, raising <code><a href="../Jargon/ParseError.html">ParseError</a></code> on validation errors.</p></div>
         
       </li>
     
@@ -337,12 +360,14 @@
       <li class="entry-summary">
         <a href="#parse%28args%3AArray%28String%29%2Cinput%3AIO%2C%2A%2Cdefaults%3AJSON%3A%3AAny%7CHash%28String%2CJSON%3A%3AAny%29%7CNil%3Dnil%29%3AResult-instance-method" class="signature"><strong>#parse</strong>(args : Array(String), input : IO, *, defaults : JSON::Any | Hash(String, JSON::Any) | Nil = <span class="n">nil</span>) : Result</a>
         
+          <div class="summary"><p>:ditto: <code>input</code> supplies the stream read for the <code>-</code> (stdin JSON) form.</p></div>
+        
       </li>
     
       <li class="entry-summary">
         <a href="#parse%28args%3AArray%28String%29%3DARGV%2C%2A%2Cdefaults%3AJSON%3A%3AAny%7CHash%28String%2CJSON%3A%3AAny%29%7CNil%3Dnil%29%3AResult-instance-method" class="signature"><strong>#parse</strong>(args : Array(String) = <span class="t">ARGV</span>, *, defaults : JSON::Any | Hash(String, JSON::Any) | Nil = <span class="n">nil</span>) : Result</a>
         
-          <div class="summary"><p>Parse arguments and return full Result with errors array.</p></div>
+          <div class="summary"><p>Parse arguments into a <code><a href="../Jargon/Result.html">Result</a></code> (parsed data plus any validation errors); never raises on invalid input.</p></div>
         
       </li>
     
@@ -415,6 +440,8 @@
       <li class="entry-summary">
         <a href="#subcommand_key%28key%3AString%29-instance-method" class="signature"><strong>#subcommand_key</strong>(key : String)</a>
         
+          <div class="summary"><p>Set the JSON key that names the subcommand when parsing full JSON from stdin (the <code>-</code> form).</p></div>
+        
       </li>
     
       <li class="entry-summary">
@@ -437,10 +464,14 @@
       <li class="entry-summary">
         <a href="#validate%28result%3AResult%29%3AArray%28String%29-instance-method" class="signature"><strong>#validate</strong>(result : Result) : Array(String)</a>
         
+          <div class="summary"><p>:ditto: Validate a previously parsed <code><a href="../Jargon/Result.html">Result</a></code> against its subcommand.</p></div>
+        
       </li>
     
       <li class="entry-summary">
         <a href="#zsh_completion%28command%3AString%3D%40program_name%29%3AString-instance-method" class="signature"><strong>#zsh_completion</strong>(command : String = @program_name) : String</a>
+        
+          <div class="summary"><p>Generate a shell completion shim.</p></div>
         
       </li>
     
@@ -677,6 +708,11 @@ typos and renames fail fast.</p>
         <a class="method-permalink" href="#default_subcommand%28name%3AString%29-instance-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>Set the subcommand used when arguments name none.</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -704,6 +740,13 @@ typos and renames fail fast.</p>
 
         <a class="method-permalink" href="#fish_completion%28command%3AString%3D%40program_name%29%3AString-instance-method">#</a>
       </div>
+      
+        <div class="doc">
+          
+          <p>Generate a shell completion shim. By default it calls back into this
+program; pass <code>command:</code> to point completion at a separate (e.g. lighter)
+binary that answers the hidden <code>__complete</code> verb.</p>
+        </div>
       
       <br/>
       <div>
@@ -743,6 +786,12 @@ the verb itself; the generated shim supplies it.</p>
         <a class="method-permalink" href="#help%28subcommand%3AString%29%3AString-instance-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>Render help for a single subcommand. <code><a href="../Jargon/CLI.html#subcommand%28name%3AString%2Cschema%3ASchema%29-instance-method">#subcommand</a></code> is space-separated for
+nested commands (e.g. <code>&quot;remote add&quot;</code>).</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -756,6 +805,12 @@ the verb itself; the generated shim supplies it.</p>
 
         <a class="method-permalink" href="#help%3AString-instance-method">#</a>
       </div>
+      
+        <div class="doc">
+          
+          <p>Render the program's help text: a command listing when subcommands are
+defined, an option listing for a flat CLI, or a bare usage line otherwise.</p>
+        </div>
       
       <br/>
       <div>
@@ -787,7 +842,8 @@ the verb itself; the generated shim supplies it.</p>
       
         <div class="doc">
           
-          <p>Return just the parsed data as JSON. Raises ParseError on validation errors.</p>
+          <p>Parse and return just the data, raising <code><a href="../Jargon/ParseError.html">ParseError</a></code> on validation errors.
+Use when you want the values directly and treat invalid input as fatal.</p>
         </div>
       
       <br/>
@@ -862,6 +918,11 @@ Returns nil if no config file found.</p>
         <a class="method-permalink" href="#parse%28args%3AArray%28String%29%2Cinput%3AIO%2C%2A%2Cdefaults%3AJSON%3A%3AAny%7CHash%28String%2CJSON%3A%3AAny%29%7CNil%3Dnil%29%3AResult-instance-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>:ditto: <code>input</code> supplies the stream read for the <code>-</code> (stdin JSON) form.</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -878,7 +939,9 @@ Returns nil if no config file found.</p>
       
         <div class="doc">
           
-          <p>Parse arguments and return full Result with errors array.</p>
+          <p>Parse arguments into a <code><a href="../Jargon/Result.html">Result</a></code> (parsed data plus any validation errors);
+never raises on invalid input. <code>defaults</code> seeds values not given on the
+command line (e.g. from a config file), below CLI args and env vars.</p>
         </div>
       
       <br/>
@@ -1085,6 +1148,12 @@ Each document must have a &quot;name&quot; field.</p>
         <a class="method-permalink" href="#subcommand_key%28key%3AString%29-instance-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>Set the JSON key that names the subcommand when parsing full JSON from
+stdin (the <code>-</code> form). Defaults to <code>&quot;subcommand&quot;</code>.</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -1148,6 +1217,11 @@ For subcommand validation, pass the subcommand name (space-separated for nested)
         <a class="method-permalink" href="#validate%28result%3AResult%29%3AArray%28String%29-instance-method">#</a>
       </div>
       
+        <div class="doc">
+          
+          <p>:ditto: Validate a previously parsed <code><a href="../Jargon/Result.html">Result</a></code> against its subcommand.</p>
+        </div>
+      
       <br/>
       <div>
         
@@ -1161,6 +1235,13 @@ For subcommand validation, pass the subcommand name (space-separated for nested)
 
         <a class="method-permalink" href="#zsh_completion%28command%3AString%3D%40program_name%29%3AString-instance-method">#</a>
       </div>
+      
+        <div class="doc">
+          
+          <p>Generate a shell completion shim. By default it calls back into this
+program; pass <code>command:</code> to point completion at a separate (e.g. lighter)
+binary that answers the hidden <code>__complete</code> verb.</p>
+        </div>
       
       <br/>
       <div>
