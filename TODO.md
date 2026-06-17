@@ -2,6 +2,7 @@
 
 ## Completed
 
+- **Consistent positional parsing** (v0.20.0) — variadics are greedy (capture `:`/`=` tokens and negative numbers literally, stop only at a real flag); negative numbers parse as values everywhere (`short_flag?` exempts `-<digit>`); variadic items coerce to the array's `items` type; new `cli.bare_assignment(false)` opt-out for implicit `key:value`/`key=value` assignment. Remaining edges under "Positional Parsing Follow-ups" below.
 - **Subcommand descriptions in top-level `--help`** (v0.19.1) — the command list shows each subcommand's `description:`, column-aligned. (transfs req #5)
 - **Dynamic shell completions** (v0.19.0) — all-callback shim model; `cli.completer(path)` + `cli.handle_completion`; configurable target binary. See `notes/` and the v0.19.0 release. Remaining edges tracked under "Dynamic Completion Follow-ups" below.
 - **POSIX `--` end-of-options passthrough** (v0.19.0) — everything after a bare `--` is a literal positional; variadic positional captures it verbatim. (transfs req #4)
@@ -106,6 +107,15 @@ Scoped out of the initial dynamic-completion work (v0.19.0). All are refinements
   - There is no streaming completion protocol: the shell needs the full candidate list, so Jargon must `.to_a` before printing regardless. Accepting a raw lazy `Enumerable` would therefore (a) still materialize, and (b) **hang on an unbounded source** — a footgun. The caller has to bound it either way.
   - Candidate sets are inherently small (shells truncate/page at tens–hundreds); no memory-saving scenario exists.
   - Conclusion: `Array(String)` is the correct API, not a limitation to lift.
+
+### Positional Parsing Follow-ups
+
+Edges left after the v0.20.0 parsing work. Neither is a regression; both surfaced
+during that work and are low-priority refinements.
+
+- **Double error on a bad variadic item.** A non-coercible variadic token (e.g. `nums 1 oops 3` against `items: {type: integer}`) emits *two* messages: the coercion error (`Invalid integer value 'oops' for vals`) and the validator's type error (`expected Integer, got String`). Consistent with how scalar flags already double up (coerce + validate), so it was left as-is. If it reads as noisy in practice, suppress the validator pass for tokens that already failed coercion. Low priority.
+
+- **`bare_assignment` is per-CLI, not inherited.** The setting applies to a CLI and its directly-attached Schema subcommands, but a *nested* `CLI` keeps its own (default-on) setting. To turn it off across a deep subcommand tree today you must set it on each nested CLI. Fix if it bites: propagate the parent's setting into nested CLIs at parse/dispatch time (or expose a recursive setter). Low priority until a nested-CLI user actually needs it.
 
 ### Other Ideas
 
