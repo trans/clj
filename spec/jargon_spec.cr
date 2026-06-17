@@ -958,6 +958,174 @@ describe Jargon do
       result2["number"].as_bool.should be_true
       result2.errors.should contain("Unexpected argument 'b.txt'")
     end
+
+    it "captures tokens containing ':' or '=' literally (greedy)" do
+      cli = Jargon.cli("add", json: %q({
+        "type": "object",
+        "positional": ["items"],
+        "properties": {
+          "amount": {"type": "number"},
+          "items": {"type": "array"}
+        }
+      }))
+
+      result = cli.parse(["Expenses:Food", "42", "Expenses:Income:Salary", "k=v"])
+      result.valid?.should be_true
+      result["items"].as_a.map(&.as_s).should eq(["Expenses:Food", "42", "Expenses:Income:Salary", "k=v"])
+    end
+
+    it "still breaks collection at a real flag, not at ':' tokens" do
+      cli = Jargon.cli("add", json: %q({
+        "type": "object",
+        "positional": ["items"],
+        "properties": {
+          "amount": {"type": "number"},
+          "items": {"type": "array"}
+        }
+      }))
+
+      result = cli.parse(["a:b", "c:d", "--amount", "9"])
+      result.valid?.should be_true
+      result["items"].as_a.map(&.as_s).should eq(["a:b", "c:d"])
+      result["amount"].as_f.should eq(9.0)
+    end
+  end
+
+  describe "negative number arguments" do
+    it "accepts a negative number as a scalar positional" do
+      cli = Jargon.cli("spend", json: %q({
+        "type": "object",
+        "positional": ["amount", "account"],
+        "properties": {
+          "amount": {"type": "number"},
+          "account": {"type": "string"}
+        }
+      }))
+
+      result = cli.parse(["-50", "Expenses"])
+      result.valid?.should be_true
+      result["amount"].as_f.should eq(-50.0)
+      result["account"].as_s.should eq("Expenses")
+    end
+
+    it "accepts a negative number as a flag value" do
+      cli = Jargon.cli("spend", json: %q({
+        "type": "object",
+        "properties": {"amount": {"type": "number"}}
+      }))
+
+      result = cli.parse(["--amount", "-3.14"])
+      result.valid?.should be_true
+      result["amount"].as_f.should eq(-3.14)
+    end
+
+    it "collects negative numbers inside an untyped variadic positional" do
+      cli = Jargon.cli("nums", json: %q({
+        "type": "object",
+        "positional": ["vals"],
+        "properties": {"vals": {"type": "array"}}
+      }))
+
+      result = cli.parse(["-1", "-50", "-3.14"])
+      result.valid?.should be_true
+      result["vals"].as_a.map(&.as_s).should eq(["-1", "-50", "-3.14"])
+    end
+
+    it "coerces variadic items to the array's declared item type" do
+      cli = Jargon.cli("nums", json: %q({
+        "type": "object",
+        "positional": ["vals"],
+        "properties": {
+          "vals": {"type": "array", "items": {"type": "number"}}
+        }
+      }))
+
+      result = cli.parse(["1", "-50", "3.14"])
+      result.valid?.should be_true
+      result["vals"].as_a.map(&.as_f).should eq([1.0, -50.0, 3.14])
+    end
+
+    it "reports a per-item error for a non-numeric variadic token" do
+      cli = Jargon.cli("nums", json: %q({
+        "type": "object",
+        "positional": ["vals"],
+        "properties": {
+          "vals": {"type": "array", "items": {"type": "integer"}}
+        }
+      }))
+
+      result = cli.parse(["1", "oops", "3"])
+      result.valid?.should be_false
+      result.errors.should contain("Invalid integer value 'oops' for vals")
+    end
+
+    it "still treats -ab (alpha short cluster) as flags, not a value" do
+      cli = Jargon.cli("app", json: %q({
+        "type": "object",
+        "properties": {
+          "a": {"type": "boolean", "short": "a"},
+          "b": {"type": "boolean", "short": "b"}
+        }
+      }))
+
+      result = cli.parse(["-ab"])
+      result.valid?.should be_true
+      result["a"].as_bool.should be_true
+      result["b"].as_bool.should be_true
+    end
+  end
+
+  describe "bare_assignment toggle" do
+    bare_schema = %q({
+      "type": "object",
+      "properties": {
+        "host": {"type": "string"},
+        "verbose": {"type": "boolean", "short": "v"}
+      }
+    })
+
+    it "implicitly assigns a bare key:value when on (default)" do
+      cli = Jargon.cli("app", json: bare_schema)
+      result = cli.parse(["host:8080"])
+      result.valid?.should be_true
+      result["host"].as_s.should eq("8080")
+    end
+
+    it "rejects a bare key:value as an unexpected argument when off" do
+      cli = Jargon.cli("app", json: bare_schema)
+      cli.bare_assignment(false)
+      result = cli.parse(["host:8080"])
+      result.valid?.should be_false
+      result.data.as_h.has_key?("host").should be_false
+      result.errors.should contain("Unexpected argument 'host:8080'")
+    end
+
+    it "lets an open positional slot capture a colon operand literally even when on" do
+      cli = Jargon.cli("spend", json: %q({
+        "type": "object",
+        "positional": ["amount", "account"],
+        "properties": {
+          "host": {"type": "string"},
+          "amount": {"type": "number"},
+          "account": {"type": "string"}
+        }
+      }))
+      # The positional 'account' wins before the implicit-assignment path runs,
+      # so 'host' is never assigned regardless of the toggle.
+      result = cli.parse(["1", "host:8080"])
+      result.valid?.should be_true
+      result["amount"].as_f.should eq(1.0)
+      result["account"].as_s.should eq("host:8080")
+      result.data.as_h.has_key?("host").should be_false
+    end
+
+    it "leaves --flag=value working when bare assignment is off" do
+      cli = Jargon.cli("app", json: bare_schema)
+      cli.bare_assignment(false)
+      result = cli.parse(["--host=db"])
+      result.valid?.should be_true
+      result["host"].as_s.should eq("db")
+    end
   end
 
   describe "end-of-options (--)" do

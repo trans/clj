@@ -19,6 +19,7 @@ module Jargon
     getter default_subcommand : String?
     getter subcommand_key : String
     getter completers : Hash(String, Proc(Completion::Context, Array(String)))
+    getter? bare_assignment : Bool = true
     property output : IO = STDOUT
 
     # Create a CLI from a JSON schema string.
@@ -325,6 +326,22 @@ module Jargon
       @subcommand_key = key
     end
 
+    # Control whether a bare `key:value` / `key=value` token — no leading
+    # dashes — may implicitly assign to a named property. On by default. When
+    # off, such a token is never read as an assignment: it falls to positional
+    # capture if a slot is open, otherwise it is an unexpected argument. Turn it
+    # off for deterministic parsing with zero implicit-assignment magic, e.g.
+    # when operands legitimately contain colons (`host:8080`, `16:9`) and you
+    # never want one silently absorbed as `host=8080`. Note that a positional
+    # slot already captures colon-bearing operands literally regardless of this
+    # setting; the switch only governs the implicit-assignment fallback. It does
+    # not affect `--flag=value`, which is standard long-option syntax and always
+    # honored. Applies to this CLI and its directly attached Schema subcommands;
+    # a nested CLI keeps its own setting.
+    def bare_assignment(enabled : Bool)
+      @bare_assignment = enabled
+    end
+
     # Parse arguments into a `Result` (parsed data plus any validation errors);
     # never raises on invalid input. `defaults` seeds values not given on the
     # command line (e.g. from a config file), below CLI args and env vars.
@@ -598,7 +615,11 @@ module Jargon
     end
 
     private def short_flag?(arg : String) : Bool
-      arg.starts_with?("-") && !arg.starts_with?("--") && arg.size > 1
+      return false unless arg.starts_with?("-") && arg.size > 1
+      return false if arg.starts_with?("--")
+      # A token like -50 or -3.14 is a negative number (a value), not a short
+      # flag. Mirrors the same exemption flag_like? already applies to values.
+      !arg[1].ascii_number?
     end
 
     private def handle_short_flag(arg : String, args : Array(String), i : Int32, data : Hash(String, JSON::Any), errors : Array(String), short_to_long : Hash(String, String), schema : Schema) : Int32
@@ -660,7 +681,7 @@ module Jargon
       prop = find_property(key, schema)
 
       if prop.try(&.type) == Property::Type::Array && positional_index == positional_names.size - 1
-        consumed = collect_variadic(args, i, key, data, errors, options_ended)
+        consumed = collect_variadic(args, i, key, data, errors, schema, options_ended)
         {consumed, 1}
       else
         coerced, coerce_error = coerce_value(key, arg, schema)
@@ -670,18 +691,20 @@ module Jargon
       end
     end
 
-    private def collect_variadic(args : Array(String), start : Int32, key : String, data : Hash(String, JSON::Any), errors : Array(String), passthrough : Bool = false) : Int32
+    private def collect_variadic(args : Array(String), start : Int32, key : String, data : Hash(String, JSON::Any), errors : Array(String), schema : Schema, passthrough : Bool = false) : Int32
+      item_type = find_property(key, schema).try(&.items).try(&.type)
       items = [] of JSON::Any
       i = start
       while i < args.size
         current_arg = args[i]
-        # After `--` everything is captured verbatim; otherwise stop at the
-        # first flag-like or key=value token so it can be parsed normally.
-        unless passthrough
-          break if current_arg.starts_with?("-")
-          break if current_arg.includes?("=") || current_arg.includes?(":")
-        end
-        items << JSON::Any.new(current_arg)
+        # A variadic positional is greedy: it captures every token literally,
+        # including ones that contain `:`/`=` (e.g. Expenses:Food, host:8080) or
+        # look like negative numbers (-50). It stops only at a genuine flag so
+        # that flag can be parsed normally. After `--` even flags are captured.
+        break if !passthrough && flag_like?(current_arg)
+        coerced, coerce_error = coerce_scalar(key, current_arg, item_type)
+        errors << coerce_error if coerce_error
+        items << coerced
         i += 1
       end
       set_nested_value(data, key, JSON::Any.new(items), errors)
@@ -702,7 +725,8 @@ module Jargon
       if key
         errors << coerce_error if coerce_error
         set_nested_value(data, key, value, errors)
-      elsif arg.includes?("=") || arg.includes?(":")
+      elsif bare_assignment? && (arg.includes?("=") || arg.includes?(":"))
+        # Looks like an assignment to an unknown property — suggest a fix.
         sep = arg.includes?("=") ? "=" : ":"
         unknown_key = arg.split(sep, 2)[0]
         errors << unknown_option_error(unknown_key, available_options(schema), "")
@@ -864,7 +888,8 @@ module Jargon
     end
 
     private def parse_argument(arg : String, args : Array(String), index : Int32, schema : Schema) : {String?, JSON::Any?, Int32, String?}
-      # Support key=value and key:value styles
+      # Support key=value and key:value styles, unless bare assignment is off.
+      return {nil, nil, 1, nil} unless bare_assignment?
       sep = arg.includes?("=") ? "=" : (arg.includes?(":") ? ":" : nil)
       return {nil, nil, 1, nil} unless sep
 
@@ -933,8 +958,30 @@ module Jargon
 
     private def coerce_value(key : String, value : String, schema : Schema) : {JSON::Any, String?}
       prop = find_property(key, schema)
+      type = prop.try(&.type)
 
-      case prop.try(&.type)
+      case type
+      when Property::Type::Integer, Property::Type::Number, Property::Type::Boolean
+        coerce_scalar(key, value, type)
+      when Property::Type::Array
+        items = value.split(",").map { |v| JSON::Any.new(v.strip) }
+        {JSON::Any.new(items), nil}
+      else
+        # Expand ~ for path format
+        if prop.try(&.format) == "path"
+          expanded = expand_tilde(value)
+          {JSON::Any.new(expanded), nil}
+        else
+          {JSON::Any.new(value), nil}
+        end
+      end
+    end
+
+    # Coerce a single string token to a scalar type (integer/number/boolean).
+    # Any other type (or nil) passes the value through unchanged as a string.
+    # Returns the value plus an error message when the token doesn't fit.
+    private def coerce_scalar(key : String, value : String, type : Property::Type?) : {JSON::Any, String?}
+      case type
       when Property::Type::Integer
         if int_val = value.to_i64?(strict: true)
           {JSON::Any.new(int_val), nil}
@@ -953,17 +1000,8 @@ module Jargon
         when "false", "0", "no", "off" then {JSON::Any.new(false), nil}
         else                                {JSON::Any.new(value), "Invalid boolean value '#{value}' for #{key}. Use: true/false, yes/no, on/off, 1/0"}
         end
-      when Property::Type::Array
-        items = value.split(",").map { |v| JSON::Any.new(v.strip) }
-        {JSON::Any.new(items), nil}
       else
-        # Expand ~ for path format
-        if prop.try(&.format) == "path"
-          expanded = expand_tilde(value)
-          {JSON::Any.new(expanded), nil}
-        else
-          {JSON::Any.new(value), nil}
-        end
+        {JSON::Any.new(value), nil}
       end
     end
 

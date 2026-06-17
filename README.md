@@ -106,6 +106,22 @@ Mix and match as you like:
 myapp name=John --age 30 verbose:true
 ```
 
+The bare `key:value` / `key=value` styles (no leading dashes) are an *implicit
+assignment* convenience. If your operands legitimately contain colons or equals
+— timestamps, ratios, `host:port`, account paths — you can turn the implicit
+assignment off so those tokens are always taken literally:
+
+```crystal
+cli = Jargon.cli("myapp", json: schema)
+cli.bare_assignment(false)   # only --flag / --flag=value set properties now
+```
+
+With it off, a bare `key:value` token is never read as an assignment: it falls
+to positional capture if a slot is open, otherwise it's an unexpected argument.
+The `--flag=value` long-option form is unaffected and always honored. (Note that
+an open positional slot already captures colon-bearing operands literally, so
+this switch only governs the implicit-assignment fallback.)
+
 ## Nested Objects
 
 Use dot notation for nested properties:
@@ -137,7 +153,7 @@ result = cli.parse(["user.name=John", "user.email=john@example.com"])
 | `integer` | `count=42` | Parsed as Int64, strict validation |
 | `number` | `rate=3.14` | Parsed as Float64, strict validation |
 | `boolean` | `verbose=true` or `--verbose` | Flag style supported |
-| `array` | `tags=a,b,c` | Comma-separated |
+| `array` | `tags=a,b,c` | Comma-separated; variadic positionals coerce items to the `items` type |
 | `object` | `user.name=John` | Dot notation |
 
 ### Validation Constraints
@@ -277,7 +293,38 @@ result = cli.parse(["-n", "a.txt", "b.txt", "c.txt"])
 cat -n a.txt b.txt c.txt
 ```
 
-Note: Flags should come before variadic positionals. Collection stops at the first flag encountered.
+A variadic positional is **greedy**: it captures every remaining token
+literally, including ones that contain `:` or `=` (e.g. `Expenses:Food`,
+`host:8080`) or look like negative numbers (`-50`). It stops only at a genuine
+flag, so put flags before the variadic:
+
+```sh
+cat -n a.txt b.txt c.txt      # ok: flag first
+cat a.txt -n b.txt            # -n stops collection; b.txt is then unexpected
+```
+
+When the array declares an `items` type, each collected token is coerced to it:
+
+```crystal
+schema = %({
+  "type": "object",
+  "positional": ["values"],
+  "properties": {
+    "values": {"type": "array", "items": {"type": "number"}}
+  }
+})
+
+cli = Jargon.cli("stats", json: schema)
+result = cli.parse(["1", "-50", "3.14"])
+# => {"values": [1.0, -50.0, 3.14]}
+```
+
+### Negative Numbers
+
+A token like `-50` or `-3.14` is treated as a value, not a flag — so negative
+numbers work as flag values (`--offset -50`), as scalar positionals, and inside
+variadic positionals. Only `-<letter>` tokens are parsed as short flags, so a
+short flag is never confused with a negative number.
 
 ### End of Options (`--`)
 
